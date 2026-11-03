@@ -94,7 +94,7 @@ namespace ToMeteora.Tools
             EditorGUILayout.EndScrollView();
 
             if (GUILayout.Button("New Character...", GUILayout.Height(26f)))
-                CreateNewDefinition();
+                PopupWindow.Show(GUILayoutUtility.GetLastRect(), new NewCharacterPopup(OnCharacterCreated));
             if (GUILayout.Button("New Ability...", GUILayout.Height(26f)))
                 ShowNewAbilityMenu();
             if (GUILayout.Button("Create / Update All", GUILayout.Height(26f)))
@@ -313,18 +313,12 @@ namespace ToMeteora.Tools
             resultMessage = errors.Count == 0 ? "All characters are ready." : null;
         }
 
-        void CreateNewDefinition()
+        void OnCharacterCreated(CharacterDefinition def)
         {
-            string path = EditorUtility.SaveFilePanelInProject("New Character Definition", "NewCharacter", "asset",
-                "Where should the character definition be saved?", "Assets/ToMeteora/Data/Characters");
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            var def = CreateInstance<CharacterDefinition>();
-            def.ability = AssetDatabase.LoadAssetAtPath<AbilityDefinition>("Assets/ToMeteora/Data/Abilities/BasicAttack.asset");
-            AssetDatabase.CreateAsset(def, path);
             definitions = null;
             Select(def);
+            resultMessage = $"Created '{def.id}' and {CharacterBuilder.PrefabPathFor(def, CharacterBuilder.DefaultOutputFolder)}. Assign a Visual Prefab and clips, then click Create / Update.";
+            Repaint();
         }
 
         static bool CanPreview(CharacterDefinition def) =>

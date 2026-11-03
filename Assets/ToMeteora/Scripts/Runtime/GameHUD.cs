@@ -34,7 +34,7 @@ namespace ToMeteora
             characterButtonTemplate.gameObject.SetActive(false);
             foreach (var entry in demo.roster.entries)
             {
-                if (entry.definition == null || entry.prefab == null)
+                if (entry.definition == null || entry.prefab == null || !entry.prefab.IsReady)
                     continue;
 
                 var button = Instantiate(characterButtonTemplate, characterButtonParent);

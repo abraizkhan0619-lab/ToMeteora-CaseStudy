@@ -12,17 +12,10 @@ namespace ToMeteora.Tools
 
         public static List<string> Validate(CharacterDefinition def)
         {
-            var errors = new List<string>();
             if (def == null)
-            {
-                errors.Add("No character definition selected.");
-                return errors;
-            }
+                return new List<string> { "No character definition selected." };
 
-            if (string.IsNullOrWhiteSpace(def.id))
-                errors.Add("Stable ID is empty. Set an ID such as 'hero_angelo'.");
-            else if (!IdPattern.IsMatch(def.id))
-                errors.Add($"Stable ID '{def.id}' is not allowed. Use lowercase letters, numbers and '_' only, starting with a letter (e.g. 'hero_angelo').");
+            var errors = ValidateId(def);
 
             if (string.IsNullOrWhiteSpace(def.displayName))
                 errors.Add("Display Name is empty. Enter the name players will see.");
@@ -57,15 +50,27 @@ namespace ToMeteora.Tools
             else if (def.ability.radius <= 0f)
                 errors.Add($"Ability '{def.ability.name}' has a radius of {def.ability.radius}. It must be greater than 0.");
 
-            if (!string.IsNullOrWhiteSpace(def.id))
-            {
-                foreach (var other in FindAllDefinitions())
-                {
-                    if (other != def && other.id == def.id)
-                        errors.Add($"ID '{def.id}' is also used by '{AssetDatabase.GetAssetPath(other)}'. Each character needs its own ID.");
-                }
-            }
+            return errors;
+        }
 
+        public static List<string> ValidateId(CharacterDefinition def) => ValidateId(def.id, def);
+
+        public static List<string> ValidateId(string id, CharacterDefinition owner = null)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                errors.Add("Stable ID is empty. Set an ID such as 'hero_angelo'.");
+                return errors;
+            }
+            if (!IdPattern.IsMatch(id))
+                errors.Add($"Stable ID '{id}' is not allowed. Use lowercase letters, numbers and '_' only, starting with a letter (e.g. 'hero_angelo').");
+
+            foreach (var other in FindAllDefinitions())
+            {
+                if (other != owner && other.id == id)
+                    errors.Add($"ID '{id}' is also used by '{AssetDatabase.GetAssetPath(other)}'. Each character needs its own ID.");
+            }
             return errors;
         }
 

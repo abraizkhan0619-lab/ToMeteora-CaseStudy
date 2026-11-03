@@ -26,7 +26,7 @@ namespace ToMeteora
         {
             if (Current != null || roster == null)
                 return;
-            var first = roster.entries.Find(e => e.definition != null && e.prefab != null);
+            var first = roster.entries.Find(e => e.definition != null && e.prefab != null && e.prefab.IsReady);
             if (first != null)
                 Select(first.definition.id);
         }
@@ -34,9 +34,9 @@ namespace ToMeteora
         public HeroCharacter Select(string id)
         {
             var entry = roster.FindById(id);
-            if (entry == null || entry.prefab == null)
+            if (entry == null || entry.prefab == null || !entry.prefab.IsReady)
             {
-                Debug.LogError($"No ready character with ID '{id}' in the roster. Run To Meteora > Character Setup.");
+                Debug.LogError($"No ready character with ID '{id}' in the roster. Finish it in To Meteora > Character Setup and click Create / Update.");
                 return null;
             }
 

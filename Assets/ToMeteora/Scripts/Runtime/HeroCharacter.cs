@@ -10,6 +10,8 @@ namespace ToMeteora
         [Tooltip("Set by the setup tool.")]
         public CharacterDefinition definition;
 
+        public bool IsReady => definition != null && transform.Find(VisualChildName) != null && GetComponent<AbilityBehaviour>() != null;
+
         public float CurrentHealth { get; private set; }
         public AbilityBehaviour Ability { get; private set; }
         public Animator Animator { get; private set; }

@@ -38,19 +38,23 @@ namespace ToMeteora.Tools
                     roster.entries.Add(new CharacterRoster.Entry { definition = def });
                     changed = true;
                 }
-                else if (entry.prefab != null)
+                else if (entry.prefab != null && entry.prefab.IsReady)
                     continue;
 
+                SaveRoster(roster, ref changed);
                 var errors = CharacterValidator.Validate(def);
                 if (errors.Count == 0)
                 {
-                    SaveRoster(roster, ref changed);
                     CharacterBuilder.CreateOrUpdate(def);
-                    Debug.Log($"'{def.name}' was added to the roster and its prefab was built.");
+                    Debug.Log($"'{def.name}' is in the roster and its prefab is built.");
+                }
+                else if (CharacterBuilder.CreatePlaceholder(def).Count == 0)
+                {
+                    Debug.Log($"'{def.name}' is in the roster with a placeholder prefab. It is finished on Create / Update once valid: {errors[0]}");
                 }
                 else
                 {
-                    Debug.Log($"'{def.name}' was added to the roster. Its prefab will be built once it is valid: {errors[0]}");
+                    Debug.Log($"'{def.name}' was added to the roster. Its prefab is created once it has a valid ID: {errors[0]}");
                 }
             }
 

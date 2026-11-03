@@ -28,20 +28,9 @@ namespace ToMeteora.Tools
             EnsureFolder(outputFolder);
             string prefabPath = PrefabPathFor(def, outputFolder);
 
-            var entry = roster.FindByDefinition(def);
-            if (entry != null && entry.prefab != null)
-            {
-                string oldPath = AssetDatabase.GetAssetPath(entry.prefab);
-                if (oldPath != prefabPath)
-                {
-                    if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
-                        return new List<string> { $"Cannot rename '{oldPath}': '{prefabPath}' already exists. Delete it or choose another ID." };
-
-                    string moveError = AssetDatabase.MoveAsset(oldPath, prefabPath);
-                    if (!string.IsNullOrEmpty(moveError))
-                        return new List<string> { $"Cannot rename '{oldPath}' to '{prefabPath}': {moveError}" };
-                }
-            }
+            string renameError = MoveIfIdChanged(def, roster, prefabPath);
+            if (renameError != null)
+                return new List<string> { renameError };
 
             bool isNew = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) == null;
             try
@@ -57,6 +46,57 @@ namespace ToMeteora.Tools
             }
 
             return errors;
+        }
+
+        public static List<string> CreatePlaceholder(CharacterDefinition def) =>
+            CreatePlaceholder(def, LoadOrCreateRoster(DefaultRosterPath), DefaultOutputFolder);
+
+        public static List<string> CreatePlaceholder(CharacterDefinition def, CharacterRoster roster, string outputFolder)
+        {
+            var errors = CharacterValidator.ValidateId(def);
+            if (errors.Count > 0)
+                return errors;
+
+            EnsureFolder(outputFolder);
+            string prefabPath = PrefabPathFor(def, outputFolder);
+
+            string renameError = MoveIfIdChanged(def, roster, prefabPath);
+            if (renameError != null)
+                return new List<string> { renameError };
+
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) == null)
+            {
+                var root = new GameObject(def.id);
+                try
+                {
+                    root.AddComponent<HeroCharacter>().definition = def;
+                    PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+                }
+                finally
+                {
+                    Object.DestroyImmediate(root);
+                }
+            }
+
+            Register(roster, def, AssetDatabase.LoadAssetAtPath<HeroCharacter>(prefabPath));
+            return errors;
+        }
+
+        static string MoveIfIdChanged(CharacterDefinition def, CharacterRoster roster, string prefabPath)
+        {
+            var entry = roster.FindByDefinition(def);
+            if (entry == null || entry.prefab == null)
+                return null;
+
+            string oldPath = AssetDatabase.GetAssetPath(entry.prefab);
+            if (oldPath == prefabPath)
+                return null;
+
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
+                return $"Cannot rename '{oldPath}': '{prefabPath}' already exists. Delete it or choose another ID.";
+
+            string moveError = AssetDatabase.MoveAsset(oldPath, prefabPath);
+            return string.IsNullOrEmpty(moveError) ? null : $"Cannot rename '{oldPath}' to '{prefabPath}': {moveError}";
         }
 
         public static List<string> CreateOrUpdateAll()

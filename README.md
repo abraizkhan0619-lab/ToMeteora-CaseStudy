@@ -29,7 +29,7 @@ The camera is a fixed isometric view that follows the character. To see the whol
 
 Open **To Meteora > Character Setup**. The window lists every character on the left, shows the selected definition in the middle, and has a live 3D preview on the right.
 
-1. Click **New Character...** and save the asset in `Data/Characters`.
+1. Click **New Character...**, enter an ID and a display name, and click **Create**. This creates the definition in `Data/Characters` and a prefab named after the ID in `Prefabs/Characters` (e.g. `hero_tiger.prefab`), and adds it to the roster. The prefab stays hidden in the game until it is finished in step 5.
 2. Fill in the fields:
 
    | Field | Notes |
@@ -51,11 +51,14 @@ Open **To Meteora > Character Setup**. The window lists every character on the l
 
 3. Check the preview. Drag to rotate it, and switch between Idle, Move and Attack to play the clips. The Attack tab also plays the attack effect, so you can tune its size and position.
 4. Click **Validate**. Every problem is listed with what to change. If the clips aren't set to loop, **Make Clips Loop** fixes that.
-5. Click **Create / Update**. The prefab is written to `Prefabs/Characters/` and the character appears in the game's selection panel.
+5. Click **Create / Update**. The same prefab is completed in place, keeping its GUID, and the character appears in the game's selection panel.
 
 **Create / Update All** rebuilds every character. It is safe to run at any time.
 
-New definitions saved in `Data/Characters` are added to `Resources/CharacterRoster.asset` automatically. Once a definition passes validation, its prefab is built the next time it is saved.
+Definitions created any other way (for example **Create > To Meteora > Character Definition**) are picked up too:
+- once saved in `Data/Characters`, they are added to `Resources/CharacterRoster.asset`
+- a placeholder prefab is made as soon as the ID is valid
+- the full prefab is built once the whole definition passes validation
 
 ## Abilities and enemies
 
