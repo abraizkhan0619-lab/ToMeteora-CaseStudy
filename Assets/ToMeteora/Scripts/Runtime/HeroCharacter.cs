@@ -115,6 +115,14 @@ namespace ToMeteora
                 Animator.SetTrigger(CharacterAnimator.AttackTrigger);
             else
                 StartCoroutine(AttackPunch());
+
+            var effect = AttackEffect.Spawn(definition, transform);
+            if (effect != null)
+            {
+                foreach (var particles in effect.GetComponentsInChildren<ParticleSystem>())
+                    particles.Play(false);
+                Destroy(effect, AttackEffect.Duration(effect));
+            }
             return true;
         }
 

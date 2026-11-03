@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -22,6 +22,10 @@ MonoBehaviour:
   attackClip: {fileID: 0}
   moveAnimationSpeed: 1
   customController: {fileID: 0}
+  attackEffect: {fileID: 3292412109855945549, guid: 02bf66902e8c0d64d9be5e8e7beb516c, type: 3}
+  attackEffectScale: 1.3
+  attackEffectOffset: {x: 0, y: 1.3499999, z: 1.2}
+  attackEffectFollowsCharacter: 0
   health: 140
   moveSpeed: 4
   cooldown: 4

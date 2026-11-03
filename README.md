@@ -41,9 +41,13 @@ Open **To Meteora > Character Setup**. The window lists every character on the l
    | Attack Clip | Optional. Without one, the attack plays a short punch effect |
    | Move Animation Speed | Raise it if the feet slide |
    | Custom Controller | Optional. Must have a float `Speed` and a trigger `Attack` |
+   | Attack Effect | Optional particle prefab played on attack, e.g. `Prefabs/Effects/AttackBurst` |
+   | Attack Effect Scale | Size multiplier for the effect |
+   | Attack Effect Offset | Where it appears relative to the character (x right, y up, z forward) |
+   | Attack Effect Follows Character | On: moves with the character. Off: stays where it was played |
    | Health, Move Speed, Cooldown, Ability | Gameplay values |
 
-3. Check the preview. Drag to rotate it, and switch between Idle, Move and Attack to play the clips.
+3. Check the preview. Drag to rotate it, and switch between Idle, Move and Attack to play the clips. The Attack tab also plays the attack effect, so you can tune its size and position.
 4. Click **Validate**. Every problem is listed with what to change. If the clips aren't set to loop, **Make Clips Loop** fixes that.
 5. Click **Create / Update**. The prefab is written to `Prefabs/Characters/` and the character appears in the game's selection panel.
 
@@ -175,7 +179,7 @@ The HUD uses TextMeshPro for all text. To restyle the character buttons, edit th
 
 ## Known limitations
 
-- The monster pack has no attack animation. The attack is a short punch effect and does no damage.
+- The monster pack has no attack animation. The attack plays the particle effect with a short punch on the model, and does no damage.
 - Obstacles use their full mesh, so fir trees block at the width of their lowest branches.
 - The fog of war is visual only.
 - The roster loads from `Resources`. A production project would likely use Addressables.

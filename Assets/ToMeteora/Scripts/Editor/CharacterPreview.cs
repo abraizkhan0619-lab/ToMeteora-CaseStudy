@@ -20,6 +20,9 @@ namespace ToMeteora.Tools
         GameObject animationTarget;
         Vector3 frameCenter = Vector3.up;
         float frameRadius = 1f;
+        GameObject effect;
+        ParticleSystem[] effectParticles = Array.Empty<ParticleSystem>();
+        (GameObject prefab, float scale, Vector3 offset) effectShown;
 
         public void Show(CharacterDefinition def)
         {
@@ -94,6 +97,43 @@ namespace ToMeteora.Tools
                 clip.SampleAnimation(animationTarget, clip.length > 0f ? time % clip.length : 0f);
         }
 
+        public void ShowEffect(CharacterDefinition def, bool visible, float time)
+        {
+            var key = (def.attackEffect, def.attackEffectScale, def.attackEffectOffset);
+            if (effect != null && !key.Equals(effectShown))
+                ClearEffect();
+
+            if (!visible || def.attackEffect == null || root == null)
+            {
+                if (effect != null)
+                    effect.SetActive(false);
+                return;
+            }
+
+            if (effect == null)
+            {
+                effect = AttackEffect.Spawn(def, root.transform);
+                effect.transform.SetParent(root.transform, true);
+                foreach (var t in effect.GetComponentsInChildren<Transform>(true))
+                    t.gameObject.hideFlags = HideFlags.HideAndDontSave;
+                effectParticles = effect.GetComponentsInChildren<ParticleSystem>(true);
+                effectShown = key;
+            }
+
+            effect.SetActive(true);
+            float loop = AttackEffect.Duration(effect);
+            foreach (var particles in effectParticles)
+                particles.Simulate(time % loop, false, true);
+        }
+
+        void ClearEffect()
+        {
+            if (effect != null)
+                Object.DestroyImmediate(effect);
+            effect = null;
+            effectParticles = Array.Empty<ParticleSystem>();
+        }
+
         public void Draw(Rect rect)
         {
             utility.BeginPreview(rect, GUIStyle.none);
@@ -140,6 +180,7 @@ namespace ToMeteora.Tools
 
         public void Clear()
         {
+            ClearEffect();
             if (root != null)
                 Object.DestroyImmediate(root);
             foreach (var mesh in baked)

@@ -37,6 +37,14 @@ namespace ToMeteora.Tools
 
             ValidateAnimation(def, errors);
 
+            if (def.attackEffect != null)
+            {
+                if (def.attackEffect.GetComponentInChildren<ParticleSystem>(true) == null)
+                    errors.Add($"Attack Effect '{def.attackEffect.name}' has no Particle System. Pick a particle prefab, or leave it empty.");
+                if (def.attackEffectScale <= 0f)
+                    errors.Add($"Attack Effect Scale is {def.attackEffectScale}. It must be greater than 0.");
+            }
+
             if (def.health <= 0f)
                 errors.Add($"Health is {def.health}. It must be greater than 0.");
             if (def.moveSpeed <= 0f)

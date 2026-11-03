@@ -167,6 +167,7 @@ namespace ToMeteora.Tools
             if (Event.current.type == EventType.Repaint)
             {
                 preview.Sample(ClipToPreview(), previewTime);
+                preview.ShowEffect(selected, previewClip == PreviewClip.Attack, previewTime);
                 preview.Draw(rect);
             }
 
@@ -188,7 +189,7 @@ namespace ToMeteora.Tools
             }
             else
             {
-                EditorGUILayout.LabelField(previewClip == PreviewClip.Attack ? "No attack clip: a punch effect is used." : "No clip assigned.", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField(previewClip == PreviewClip.Attack ? "No attack clip: showing idle with the attack effect." : "No clip assigned.", EditorStyles.miniLabel);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField("Drag the preview to rotate.", EditorStyles.centeredGreyMiniLabel);
