@@ -5,7 +5,9 @@ namespace ToMeteora
     public class CharacterSelectDemo : MonoBehaviour
     {
         public CharacterRoster roster;
-        [Tooltip("Where characters appear.")]
+        [Tooltip("Where the first character appears, and which way it faces. Found in the scene if left empty.")]
+        public PlayerStart playerStart;
+        [Tooltip("Used only when the scene has no Player Start.")]
         public Vector3 spawnPoint = Vector3.zero;
         [Tooltip("Area (x/z) the character must stay inside. Width or height 0 = no limit.")]
         public Rect playArea;
@@ -16,6 +18,8 @@ namespace ToMeteora
         {
             if (roster == null)
                 roster = Resources.Load<CharacterRoster>("CharacterRoster");
+            if (playerStart == null)
+                playerStart = FindAnyObjectByType<PlayerStart>();
         }
 
         void Start()
@@ -36,8 +40,10 @@ namespace ToMeteora
                 return null;
             }
 
-            var position = Current != null ? Current.transform.position : spawnPoint;
-            var rotation = Current != null ? Current.transform.rotation : Quaternion.identity;
+            var start = playerStart != null ? playerStart.transform : null;
+            var position = Current != null ? Current.transform.position : start != null ? start.position : spawnPoint;
+            var rotation = Current != null ? Current.transform.rotation
+                : start != null ? Quaternion.Euler(0f, start.eulerAngles.y, 0f) : Quaternion.identity;
             if (Current != null)
                 Destroy(Current.gameObject);
 

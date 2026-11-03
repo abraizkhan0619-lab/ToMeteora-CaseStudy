@@ -208,6 +208,7 @@ namespace ToMeteora.Tools
                 ground.max.x - EdgeMargin, ground.max.z - EdgeMargin);
             demo.spawnPoint = FindSpawnPoint(ground, everything);
             Debug.Log($"MAP: spawn at {demo.spawnPoint}");
+            AddPlayerStart(demo, gameplay);
 
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             camGo.transform.SetParent(gameplay);
@@ -286,6 +287,23 @@ namespace ToMeteora.Tools
                 return point.Value;
             Debug.LogWarning($"MAP: no ground found below {xz}");
             return new Vector3(xz.x, everything.center.y, xz.z);
+        }
+
+        public static PlayerStart AddPlayerStart(CharacterSelectDemo demo, Transform parent)
+        {
+            var existing = Object.FindAnyObjectByType<PlayerStart>();
+            if (existing != null)
+            {
+                demo.playerStart = existing;
+                return existing;
+            }
+
+            var start = new GameObject("Player Start").AddComponent<PlayerStart>();
+            start.transform.SetParent(parent, false);
+            start.transform.SetPositionAndRotation(demo.spawnPoint, Quaternion.Euler(0f, 225f, 0f));
+            demo.playerStart = start;
+            EditorUtility.SetDirty(demo);
+            return start;
         }
 
         public static void AddEnemiesToOpenScene()

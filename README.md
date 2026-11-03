@@ -21,6 +21,8 @@ A Unity editor workflow for adding new characters. You fill in one data asset, a
 
    The panel at the bottom left shows health, speed, ability and cooldown.
 
+The character starts at the **Player Start** object (`Gameplay/Player Start`), facing the way its green arrow points in the Scene view. Move or rotate it to change where play begins.
+
 The camera is a fixed isometric view that follows the character. To see the whole map instead, untick **Follow Character** on `Gameplay/Main Camera`.
 
 ## Adding a character
