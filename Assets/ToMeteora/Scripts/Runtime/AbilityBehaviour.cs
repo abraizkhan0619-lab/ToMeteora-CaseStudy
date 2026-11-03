@@ -8,6 +8,7 @@ namespace ToMeteora
 
         public float CooldownRemaining => Mathf.Max(0f, readyAtTime - Time.time);
         public int TimesUsed { get; private set; }
+        public int LastHitCount { get; protected set; }
 
         public bool TryUse(CharacterDefinition character)
         {

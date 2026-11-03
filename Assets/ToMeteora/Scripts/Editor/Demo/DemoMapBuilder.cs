@@ -21,6 +21,8 @@ namespace ToMeteora.Tools
         const string PostProcessPath = "Assets/ToMeteora/Settings/DemoPostProcess.asset";
         const string HudPrefabPath = "Assets/ToMeteora/Prefabs/UI/GameHUD.prefab";
         const float EdgeMargin = 2f;
+        const string EnemyPrefabPath = "Assets/ToMeteora/Prefabs/Enemies/DummyEnemy.prefab";
+        const int EnemyCount = 8;
 
         public static void Build()
         {
@@ -33,6 +35,7 @@ namespace ToMeteora.Tools
             SetupLighting();
             var demo = SetupGameplay(ground, everything, out var camera, out var fog);
             SetupUi(demo);
+            PlaceEnemies(demo, everything);
             SetShadowDistance(camera.GetComponent<IsometricCamera>());
 
             SavePreviews(camera, fog, demo.spawnPoint, everything);
@@ -283,6 +286,60 @@ namespace ToMeteora.Tools
                 return point.Value;
             Debug.LogWarning($"MAP: no ground found below {xz}");
             return new Vector3(xz.x, everything.center.y, xz.z);
+        }
+
+        public static void AddEnemiesToOpenScene()
+        {
+            var demo = Object.FindAnyObjectByType<CharacterSelectDemo>();
+            if (demo == null)
+                throw new Exception("The open scene has no CharacterSelectDemo.");
+
+            GroundColliders.Clear();
+            var renderers = Object.FindObjectsByType<MeshRenderer>();
+            foreach (var r in renderers.Where(r => MeshPath(r).Contains("/Models/Lands/")))
+                if (r.TryGetComponent<MeshCollider>(out var collider))
+                    GroundColliders.Add(collider);
+
+            PlaceEnemies(demo, Encapsulate(renderers));
+        }
+
+        static void PlaceEnemies(CharacterSelectDemo demo, Bounds everything)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(EnemyPrefabPath);
+            if (prefab == null)
+                return;
+
+            var old = GameObject.Find("Enemies");
+            if (old != null)
+                Object.DestroyImmediate(old);
+            var group = new GameObject("Enemies").transform;
+
+            Physics.SyncTransforms();
+            int placed = 0;
+            for (float radius = 5f; radius <= 12f && placed < EnemyCount; radius += 2.5f)
+            {
+                for (float angle = radius * 17f; angle < radius * 17f + 360f && placed < EnemyCount; angle += 55f)
+                {
+                    var xz = demo.spawnPoint + Quaternion.Euler(0f, angle, 0f) * Vector3.forward * radius;
+                    if (!demo.playArea.Contains(new Vector2(xz.x, xz.z)))
+                        continue;
+
+                    var point = GroundPoint(xz, everything);
+                    bool blocked = Physics.OverlapCapsule(point + Vector3.up * 0.7f, point + Vector3.up * 1.7f, 0.7f)
+                        .Any(c => !GroundColliders.Contains(c));
+                    if (blocked)
+                        continue;
+
+                    var enemy = (GameObject)PrefabUtility.InstantiatePrefab(prefab, group);
+                    enemy.name = $"DummyEnemy {placed + 1}";
+                    enemy.transform.SetPositionAndRotation(point, Quaternion.LookRotation(demo.spawnPoint - point, Vector3.up));
+                    var euler = enemy.transform.eulerAngles;
+                    enemy.transform.rotation = Quaternion.Euler(0f, euler.y, 0f);
+                    Physics.SyncTransforms();
+                    placed++;
+                }
+            }
+            Debug.Log($"MAP: placed {placed} dummy enemies");
         }
 
         static void SetupUi(CharacterSelectDemo demo)

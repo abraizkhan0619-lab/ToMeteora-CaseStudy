@@ -20,8 +20,11 @@ namespace ToMeteora
 
         void Start()
         {
-            if (Current == null && roster != null && roster.entries.Count > 0 && roster.entries[0].definition != null)
-                Select(roster.entries[0].definition.id);
+            if (Current != null || roster == null)
+                return;
+            var first = roster.entries.Find(e => e.definition != null && e.prefab != null);
+            if (first != null)
+                Select(first.definition.id);
         }
 
         public HeroCharacter Select(string id)

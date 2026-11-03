@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ namespace ToMeteora.Tools
         List<CharacterDefinition> definitions;
         CharacterDefinition selected;
         Editor definitionEditor;
+        Editor abilityEditor;
+        bool showAbility = true;
         readonly List<string> errors = new List<string>();
         string resultMessage;
         Vector2 listScroll;
@@ -44,6 +47,8 @@ namespace ToMeteora.Tools
             preview = null;
             if (definitionEditor != null)
                 DestroyImmediate(definitionEditor);
+            if (abilityEditor != null)
+                DestroyImmediate(abilityEditor);
         }
 
         void OnProjectChange() => definitions = null;
@@ -90,6 +95,8 @@ namespace ToMeteora.Tools
 
             if (GUILayout.Button("New Character...", GUILayout.Height(26f)))
                 CreateNewDefinition();
+            if (GUILayout.Button("New Ability...", GUILayout.Height(26f)))
+                ShowNewAbilityMenu();
             if (GUILayout.Button("Create / Update All", GUILayout.Height(26f)))
                 CreateOrUpdateAll();
             EditorGUILayout.EndVertical();
@@ -116,6 +123,7 @@ namespace ToMeteora.Tools
                 errors.Clear();
                 resultMessage = null;
             }
+            DrawAbilitySettings();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
 
@@ -126,6 +134,58 @@ namespace ToMeteora.Tools
             EditorGUILayout.EndHorizontal();
             DrawActions();
             EditorGUILayout.EndVertical();
+        }
+
+        void DrawAbilitySettings()
+        {
+            if (selected.ability == null)
+                return;
+
+            EditorGUILayout.Space(8f);
+            showAbility = EditorGUILayout.Foldout(showAbility, $"Ability settings: {selected.ability.name}", true, EditorStyles.foldoutHeader);
+            if (!showAbility)
+                return;
+
+            int users = definitions.Count(d => d != null && d.ability == selected.ability);
+            if (users > 1)
+                EditorGUILayout.HelpBox($"This ability is shared by {users} characters. Changes apply to all of them.", MessageType.None);
+
+            Editor.CreateCachedEditor(selected.ability, null, ref abilityEditor);
+            abilityEditor.OnInspectorGUI();
+        }
+
+        void ShowNewAbilityMenu()
+        {
+            var menu = new GenericMenu();
+            foreach (var type in TypeCache.GetTypesDerivedFrom<AbilityDefinition>().Where(t => !t.IsAbstract))
+                menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name.Replace("Definition", ""))), false, () => CreateNewAbility(type));
+            menu.ShowAsContext();
+        }
+
+        void CreateNewAbility(System.Type type)
+        {
+            string path = EditorUtility.SaveFilePanelInProject("New Ability", "NewAbility", "asset",
+                "Where should the ability be saved?", "Assets/ToMeteora/Data/Abilities");
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            var ability = (AbilityDefinition)CreateInstance(type);
+            ability.displayName = System.IO.Path.GetFileNameWithoutExtension(path);
+            var template = AssetDatabase.LoadAssetAtPath<AbilityDefinition>("Assets/ToMeteora/Data/Abilities/BasicAttack.asset");
+            if (template != null)
+                ability.areaIndicator = template.areaIndicator;
+            AssetDatabase.CreateAsset(ability, path);
+
+            if (selected != null && EditorUtility.DisplayDialog("New Ability",
+                    $"Use '{ability.name}' for {selected.displayName}?", "Yes", "No"))
+            {
+                Undo.RecordObject(selected, "Assign ability");
+                selected.ability = ability;
+                EditorUtility.SetDirty(selected);
+                AssetDatabase.SaveAssetIfDirty(selected);
+            }
+            EditorGUIUtility.PingObject(ability);
+            resultMessage = $"Created ability '{ability.name}' at {path}.";
         }
 
         void DrawActions()

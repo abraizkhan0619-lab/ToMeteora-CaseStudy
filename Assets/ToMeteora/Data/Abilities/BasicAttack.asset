@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: BasicAttack
   m_EditorClassIdentifier: ToMeteora.Runtime::ToMeteora.BasicAttackDefinition
   displayName: Basic Attack
-  damage: 10
-  range: 2
+  damage: 20
+  range: 1.5
+  radius: 3
+  areaIndicator: {fileID: 2442011001530533607, guid: 64e4cb04fcd364449b4cf0f3ffd74001, type: 3}

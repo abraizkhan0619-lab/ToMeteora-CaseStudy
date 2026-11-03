@@ -54,6 +54,8 @@ namespace ToMeteora.Tools
 
             if (def.ability == null)
                 errors.Add("Ability is missing. Pick an ability asset, e.g. 'BasicAttack'.");
+            else if (def.ability.radius <= 0f)
+                errors.Add($"Ability '{def.ability.name}' has a radius of {def.ability.radius}. It must be greater than 0.");
 
             if (!string.IsNullOrWhiteSpace(def.id))
             {

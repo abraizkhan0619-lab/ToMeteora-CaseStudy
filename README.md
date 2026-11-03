@@ -53,6 +53,24 @@ Open **To Meteora > Character Setup**. The window lists every character on the l
 
 **Create / Update All** rebuilds every character. It is safe to run at any time.
 
+New definitions saved in `Data/Characters` are added to `Resources/CharacterRoster.asset` automatically. Once a definition passes validation, its prefab is built the next time it is saved.
+
+## Abilities and enemies
+
+Abilities are assets in `Data/Abilities`. **New Ability...** in the setup window creates one; pick the ability type, and optionally assign it to the selected character. The selected character's ability can also be edited directly in the window, under **Ability settings**. If several characters share the ability, the window tells you.
+
+| Field | Notes |
+|---|---|
+| Damage | Damage dealt to each enemy inside the area |
+| Range | How far in front of the character the area is centred. 0 means around the character |
+| Radius | Enemies within this distance of the area centre are hit |
+| Area Indicator | Optional particle prefab that shows the area, e.g. `Prefabs/Effects/AoeRing`. Its circle is sized to the radius |
+
+The demo map has dummy enemies (`Prefabs/Enemies/DummyEnemy`):
+- Every enemy inside the area flashes when hit and gets darker as it loses health.
+- At zero health an enemy shrinks away and comes back after `Respawn Seconds`.
+- The HUD shows how many enemies the last attack hit.
+
 ## How it works
 
 - **Data lives in the definition.** Each character is a `CharacterDefinition` ScriptableObject. The generated prefab only points to it, so changing a stat or a clip doesn't need a rebuild.
@@ -179,7 +197,8 @@ The HUD uses TextMeshPro for all text. To restyle the character buttons, edit th
 
 ## Known limitations
 
-- The monster pack has no attack animation. The attack plays the particle effect with a short punch on the model, and does no damage.
+- The monster pack has no attack animation. The attack plays the particle effect with a short punch on the model.
+- Enemies are training dummies: they don't move or fight back.
 - Obstacles use their full mesh, so fir trees block at the width of their lowest branches.
 - The fog of war is visual only.
 - The roster loads from `Resources`. A production project would likely use Addressables.

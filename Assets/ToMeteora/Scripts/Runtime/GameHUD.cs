@@ -60,7 +60,9 @@ namespace ToMeteora
             idText.text = d.id;
             healthText.text = $"{hero.CurrentHealth:0} / {d.health:0}";
             speedText.text = $"{d.moveSpeed} u/s";
-            abilityText.text = d.ability.displayName;
+            abilityText.text = hero.Ability.TimesUsed > 0
+                ? $"{d.ability.displayName} - hit {hero.Ability.LastHitCount}"
+                : d.ability.displayName;
             if (healthFill != null)
                 healthFill.fillAmount = hero.CurrentHealth / d.health;
 
