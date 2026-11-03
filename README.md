@@ -73,8 +73,13 @@ Abilities are assets in `Data/Abilities`. **New Ability...** in the setup window
 
 The demo map has dummy enemies (`Prefabs/Enemies/DummyEnemy`):
 - Every enemy inside the area flashes when hit and gets darker as it loses health.
-- At zero health an enemy shrinks away and comes back after `Respawn Seconds`.
+- Each enemy has a health bar (`Prefabs/UI/EnemyHealthBar`, a world-space Canvas built from Unity's placeholder sprites). It always faces the camera, slides down on damage, shifts from green to red, and shows a white trail of the damage just taken.
+- At zero health an enemy shrinks away and grows back in place after `Respawn Seconds`.
 - The HUD shows how many enemies the last attack hit.
+
+Clicking an enemy in the Scene view selects the whole enemy, so moving it keeps the capsule, collider and health bar together.
+
+Every attack shakes the camera. Set **Camera Shake Strength** (0 turns it off) and **Camera Shake Duration** in the character's Attack Effect section.
 
 ## How it works
 

@@ -118,6 +118,9 @@ namespace ToMeteora
             else
                 StartCoroutine(AttackPunch());
 
+            if (IsometricCamera.Active != null)
+                IsometricCamera.Active.Shake(definition.cameraShakeStrength, definition.cameraShakeDuration);
+
             var effect = AttackEffect.Spawn(definition, transform);
             if (effect != null)
             {

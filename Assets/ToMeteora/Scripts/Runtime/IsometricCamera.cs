@@ -26,10 +26,24 @@ namespace ToMeteora
         [Range(20f, 70f)] public float pitch = 35f;
         public float yaw = 45f;
 
+        public static IsometricCamera Active { get; private set; }
+
         Vector3 focus;
         Vector3 focusVelocity;
+        float shakeStrength;
+        float shakeDuration;
+        float shakeTimeLeft;
+        float shakeSeed;
 
         public float Distance => mapSize * 1.5f;
+
+        void OnEnable() => Active = this;
+
+        void OnDisable()
+        {
+            if (Active == this)
+                Active = null;
+        }
 
         void Start() => focus = Target();
 
@@ -37,6 +51,33 @@ namespace ToMeteora
         {
             focus = Vector3.SmoothDamp(focus, Target(), ref focusVelocity, followSmoothTime);
             Apply(focus);
+            ApplyShake();
+        }
+
+        public void Shake(float strength, float duration)
+        {
+            if (strength <= 0f || duration <= 0f)
+                return;
+            if (strength >= shakeStrength * (shakeTimeLeft / Mathf.Max(shakeDuration, 0.0001f)))
+            {
+                shakeStrength = strength;
+                shakeDuration = duration;
+                shakeTimeLeft = duration;
+                shakeSeed = Random.value * 100f;
+            }
+        }
+
+        void ApplyShake()
+        {
+            if (shakeTimeLeft <= 0f)
+                return;
+
+            shakeTimeLeft -= Time.deltaTime;
+            float fade = Mathf.Clamp01(shakeTimeLeft / shakeDuration);
+            float time = Time.time * 30f;
+            float x = Mathf.PerlinNoise(shakeSeed, time) * 2f - 1f;
+            float y = Mathf.PerlinNoise(shakeSeed + 37f, time) * 2f - 1f;
+            transform.position += (transform.right * x + transform.up * y) * shakeStrength * fade * fade;
         }
 
         public void Fit()

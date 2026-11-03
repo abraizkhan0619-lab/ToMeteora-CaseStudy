@@ -38,6 +38,10 @@ namespace ToMeteora
         public Vector3 attackEffectOffset = new Vector3(0f, 1f, 1.2f);
         [Tooltip("On: the effect moves with the character. Off: it stays where it was played.")]
         public bool attackEffectFollowsCharacter = false;
+        [Tooltip("How far the camera shakes on attack, in Unity units. 0 = no shake.")]
+        public float cameraShakeStrength = 0.4f;
+        [Tooltip("How long the camera shake lasts, in seconds.")]
+        public float cameraShakeDuration = 0.25f;
 
         [Header("Stats")]
         public float health = 100f;
