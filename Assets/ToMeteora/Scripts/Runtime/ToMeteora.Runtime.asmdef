@@ -1,0 +1,9 @@
+{
+    "name": "ToMeteora.Runtime",
+    "rootNamespace": "ToMeteora",
+    "references": [
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "autoReferenced": true
+}
