@@ -107,7 +107,7 @@ to D:\ToMeteora.
 
 The final automated checks are the ones the brief asks for: six EditMode
 tests and a play-mode smoke check for both characters. All pass, with no
-compiler warnings (see README.txt for the list).
+compiler warnings (see README.md for the list).
 
 The defects below were real ones, found during development. Each was
 confirmed with a diagnostic before it was fixed, and checked again
