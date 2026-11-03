@@ -1,0 +1,178 @@
+DESIGN NOTES AND SIX-WEEK ROLLOUT
+=================================
+
+
+1. BOTTLENECKS IN THE SCENARIO
+------------------------------
+
+1) Manual prefab and data wiring: duplicate a prefab, attach the visual,
+   create data, add it to the selection list, link the ability. About 165 of
+   the 210 illustrative minutes. Repeated for every character and easy to
+   get wrong.
+2) Errors found late: a missing reference or duplicate ID is only seen in a
+   preview or by QA, which causes rework between artist, developer and QA.
+3) New ability behaviour needs an engineer, and that work gets mixed up with
+   routine setup, so routine characters wait behind engineering work.
+
+This prototype addresses 1 and 2. Bottleneck 3 is handled by making the
+boundary clear rather than by removing it.
+
+
+2. BOUNDARY: CODE, DATA, ENGINEER
+---------------------------------
+
+Reusable code (written once):
+  movement, cooldown logic, the ability base class, the shared animator, the
+  prefab builder, the validator, the roster.
+
+Character data (per character, no code):
+  ID, name, model prefab, height, animation clips, health, speed, cooldown,
+  which ability asset.
+
+Still needs an engineer:
+  a new ability behaviour (a new AbilityDefinition plus a new
+  AbilityBehaviour), new validation rules, rig conventions.
+
+A data-only character such as Brick means creating one asset, picking an
+existing ability and clicking Create / Update. No code changes and no
+engineer.
+
+For a character with a new ability (the third character in the scenario):
+  1. An engineer writes the new ability classes, with tests.
+  2. The character then goes through the same tool. The builder adds
+     whatever component the ability names.
+The engineering work is separate from setup and can be planned on its own.
+
+
+3. PRODUCTION CHECKS TO ADD (PROPOSALS)
+---------------------------------------
+
+Rigs and animation:
+  - Check that required states and parameters exist, and that the attack
+    clip has an animation event at the hit frame.
+  - Check the rig type and the expected root bone.
+  - Fail the build when a required clip is missing.
+
+Asset loading:
+  - Move the roster and prefabs to Addressables, one group per character.
+  - Add an editor check that every roster entry resolves to an address, and
+    a play-mode test that loads and releases each one.
+
+Mobile memory and frame time (not measured; editor numbers do not count).
+Next measurements, on a low-end and a mid-range target device in a release
+build with the Profiler and Memory Profiler:
+  - per-character texture and mesh memory
+  - draw calls and SetPass calls per character
+  - frame time with two characters on screen in the PvP arena
+  - the peak memory spike when a character loads
+Then set a per-character budget and have the validator warn when a
+character goes over it.
+
+Existing players' saved progression:
+  - Saves refer to the stable ID, never to an asset name or GUID. The
+    validator already enforces the ID format.
+  - Add a check that no released ID is ever removed or renamed, using a
+    committed list of released IDs.
+  - Version stat changes so old saves migrate, with a test that loads saves
+    from older versions.
+
+PvP authority and compatibility:
+  - The server owns health, damage, move speed, cooldown and ability
+    parameters. The client sends inputs and ability requests; the server
+    checks the cooldown.
+  - Both sides agree on a character data hash (ID, stats, ability
+    parameters). Players whose data differs are not matched together.
+  - A new ability needs server-side logic before it is enabled in PvP, and
+    stays behind a feature flag until then.
+
+
+4. SIX-WEEK PILOT
+-----------------
+
+Capacity: me full time, a second developer half time, an artist half time,
+QA half time. Roughly 30, 15, 15 and 15 person-days.
+
+Week 1 - Audit
+  Shadow one real character setup, time each step, and list failure points
+  from recent QA bugs. Map the existing prefab and data structure.
+  Owner: me, with the artist and QA for interviews.
+  Effort: 4 days me, 1 day artist, 1 day QA.
+  Gate: a written baseline with real minutes per step and the top five
+  defect types.
+
+Week 2 - Adapt the tool
+  Fit the tool to the real project: real character data, real prefab
+  layout, rig checks. Put it behind a feature flag so it is opt-in.
+  Owner: me. Depends on week 1. Effort: 5 days.
+  Gate: the tool reproduces one existing character with no behaviour
+  difference, and the checks pass in CI.
+
+Week 3 - Pilot character A (existing archetype)
+  The artist provides the model, I run the tool, QA tests.
+  Owner: me, artist, QA. Effort: 3 days me, 3 days artist, 2 days QA.
+  Gate: playable in a build, with setup time measured against the baseline.
+
+Weeks 3-4 - New ability for character C (separate track)
+  Owner: second developer. Depends on ability design sign-off.
+  Effort: about 8 days.
+  Gate: ability tests pass, it works in solo play, and a PvP authority
+  review is done.
+
+Week 4 - Adoption
+  The second developer or the artist sets up character B without my help,
+  using only the README.
+  Effort: 2 days, plus 2 days QA.
+  Gate: B is ready with no help from me, and their questions become README
+  or validator fixes.
+
+Week 5 - Character C
+  C goes through the same tool once its ability is done. Fix issues found in
+  weeks 3 and 4.
+  Effort: 4 days me, 2 days second developer, 3 days artist.
+  Gate: C is playable, with no runtime changes outside the new ability.
+
+Week 6 - Hardening and release prep
+  QA regression on all three characters, a save compatibility check, device
+  profiling of the three characters, a retro, and a decision on rolling the
+  tool out to the whole team.
+  Effort: 4 days me, 4 days QA, 2 days artist.
+  Gate: QA sign-off, time per character compared with the baseline, and a
+  go/no-go decision.
+
+Migration into the existing project: add the tool as a separate folder or
+package behind a feature flag. Don't convert old characters up front;
+migrate each one when it is next touched, and accept it only if there is no
+gameplay difference.
+
+Disable or roll back: generated prefabs are normal prefabs. Turning the tool
+off, or deleting its Editor folder, leaves every character working.
+Reverting is a normal git revert because GUIDs are stable.
+
+First scope cut if we slip: keep characters A and B on the tool, ship C's
+new ability through the existing manual process, and downgrade the rig
+checks to warnings.
+
+Baseline to establish in the first month in Doha:
+  - real hands-on minutes per character setup (at least two samples)
+  - setup-related QA bugs per character
+  - turnaround from art-ready to playable
+  - device frame time and memory for the current characters
+No production target is set until these numbers exist.
+
+
+5. RISKS AND NEXT DECISIONS
+---------------------------
+
+Risk: the real prefab structure is more complex than the sample (nested
+prefabs, variants, VFX). Decision: prefab variants of a base archetype, or
+generated prefabs?
+
+Risk: the team edits tool-owned parts by hand. Mitigation: the validator
+warns, and the ownership rules are in the README.
+
+Risk: timing gains measured on sample content may not transfer to
+production characters.
+
+Decision: Resources or Addressables for the roster.
+
+Decision: who owns character IDs once one is released.

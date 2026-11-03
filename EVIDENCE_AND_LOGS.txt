@@ -1,0 +1,229 @@
+EVIDENCE AND LOGS
+=================
+
+This file records how I used an AI coding assistant on the case study, what
+it produced, what I decided and checked myself, the defects we found along
+the way, and the timing measurements.
+
+
+1. SETUP
+--------
+
+  Assistant         Claude Code (desktop app)
+  Model             Claude Opus 5.5 (claude-opus-5-5)
+  Dates             2-3 November 2026
+  Cost              TBD (covered by my existing subscription; add the figure
+                    before submitting)
+  Inputs given      The case study brief and this sample project. No studio
+                    code, assets or credentials.
+
+
+2. HOW THE WORK WAS SPLIT
+-------------------------
+
+What I did:
+  - Read the brief and set the direction. The tool had to be simple enough
+    for an artist or designer to use without code.
+  - Made the design and content decisions: URP, a fixed isometric camera
+    that follows the character, fog of war, the Palmov Island camping forest
+    map, Stylized3DMonster models for Angelo and Brick, a Unity UI HUD built
+    with TextMeshPro, and an editor window with a live 3D and animation
+    preview.
+  - Play-tested every build in the Editor and reported the problems the
+    automated checks did not catch: the characters did not animate, they
+    floated above the ground, they walked through trees and rocks, they were
+    too small on screen, and the editor preview did not play its clips.
+  - Cut the scope back to what the brief asks for: reduced a larger test
+    suite to the checks the brief lists, removed unused asset packs, and
+    kept five monsters.
+  - Timed the manual setup, set up the private repository, and reviewed the
+    final code.
+
+What the AI did:
+  - Wrote the C# runtime and editor code, the fog of war shader and the
+    tests.
+  - Ran Unity in batch mode to build the characters and the demo scene, and
+    to run the tests.
+  - Rendered preview screenshots so each change could be checked.
+  - Investigated the defects below with targeted diagnostics, and proposed
+    and applied the fixes after I confirmed the behaviour I wanted.
+
+
+3. MY REQUESTS, SUMMARISED
+--------------------------
+
+ 1. Explain the brief and do not build anything until I ask.
+ 2. Build the full system: reusable, easy to extend, and easy to read.
+ 3. Make the camera follow the player with good lighting; later, show the
+    whole map in an isometric view.
+ 4. Switch to URP and use the camping forest location from Palmov Island.
+ 5. Use the Stylized3DMonster models for Angelo and Brick, at a sensible
+    size, with animation.
+ 6. In the setup window, show the character, assign the prefab and
+    animation clips, and preview the animations.
+ 7. Build the HUD with Unity UI and TextMeshPro, using Unity's placeholder
+    sprites.
+ 8. Separate the folders, remove extra menu items, and remove unnecessary
+    comments.
+ 9. Fix the animation not playing, characters floating, characters walking
+    through objects, and the preview not animating.
+10. Keep only the tests the brief asks for, keep five monsters, remove
+    unused assets, and push to a private GitHub repository.
+
+
+4. IMPLEMENTATION
+-----------------
+
+What the AI generated:
+  - Runtime: HeroCharacter, CharacterAnimator, the ability classes, the
+    roster, the demo driver, the HUD logic, the isometric camera and the fog
+    of war.
+  - Editor: CharacterValidator, CharacterBuilder, CharacterSetupWindow,
+    CharacterPreview and the demo scene builder.
+  - Assets: the shared animator controller and the HUD prefab.
+  - Throwaway setup and diagnostic scripts were deleted once they had run.
+
+Design decisions I kept:
+  - ScriptableObject definitions rather than JSON: direct references to
+    prefabs and clips, editable in the Inspector, stable GUIDs.
+  - Stats and clips are read from the definition at runtime, not copied
+    into the prefab. One source of truth. A copy-into-prefab approach was
+    considered and rejected because it creates two places to edit and leaves
+    stale prefabs.
+  - The tool never writes to a CharacterDefinition; the prefab link lives
+    in the roster. Adding Brick cannot change Angelo.
+  - One shared animator controller, with per-character clips swapped in at
+    runtime. A new character never needs a new controller.
+  - A new ability is a new AbilityDefinition / AbilityBehaviour pair.
+    Characters that reuse an ability need no code.
+
+Environment issue: the default project path was too long for Unity's
+Library folder (Windows long paths are disabled), so the project was moved
+to D:\ToMeteora.
+
+
+5. VERIFICATION
+---------------
+
+The final automated checks are the ones the brief asks for: six EditMode
+tests and a play-mode smoke check for both characters. All pass, with no
+compiler warnings (see README.txt for the list).
+
+The defects below were real ones, found during development. Each was
+confirmed with a diagnostic before it was fixed, and checked again
+afterwards.
+
+Defect 1 - Fog of war covered the whole map evenly
+  Found by:  a preview screenshot after the switch to URP.
+  Cause:     a temporary shader debug mode showed the depth texture was
+             empty. New URP renderer assets copy depth after transparents,
+             and the fog draws in the transparent pass.
+  Fix:       Copy Depth Mode set to After Opaques. The debug render and the
+             game view were correct afterwards.
+
+Defect 2 - Broken prefab after an asset pack was removed
+  Found by:  Unity reported a problem loading hero_angelo.prefab after I
+             removed an earlier asset pack.
+  Cause:     the prefab still held an orphaned nested prefab whose source no
+             longer existed.
+  Fix:       the builder reads the prefab's source GUIDs and rebuilds the
+             prefab cleanly at the same path when one is missing.
+  Rejected:  the first attempt used PrefabUtility.IsPrefabAssetMissing. It
+             did not detect the problem, and the check failed.
+
+Defect 3 - Characters did not animate
+  Found by:  me, in play mode. The existing checks passed because they only
+             confirmed the controller and clips were assigned.
+  Cause:     a check that measured whether any bone moved during play failed
+             for both characters. The Animator sat one level above the model
+             object that the clips' bone paths start from.
+  Fix:       the builder reads the clip's bone paths and places the Animator
+             where they resolve. The validator rejects clips made for a
+             different rig.
+  Lesson:    a check that confirms configuration is not proof of behaviour.
+
+Defect 4 - Characters floated above the ground
+  Found by:  me, in play mode.
+  Cause:     play-mode measurements showed a 1.34-unit gap. The map pack
+             ships large box colliders whose tops sit above the real
+             terrain. A smaller 14-24 cm gap came from the skinned mesh
+             bounds being larger than the actual mesh.
+  Fix:       the pack's box colliders are disabled in our scene and replaced
+             with mesh colliders, and the character is sized from the real
+             mesh vertices. Measured gap after the fix: 0.000.
+
+Defect 5 - Characters walked through objects
+  Found by:  me, in play mode.
+  Fix:       a CharacterController with gravity on each character, mesh
+             colliders on trees, rocks, tents, logs and the bridge, and a
+             water check that stops the character at the river bank.
+  Verified:  pushing the character into a tree, a rock, a post, the bridge
+             railing and the river stopped it every time.
+
+Defect 6 - Animations did not play in the setup window preview
+  Found by:  me, in the Character Setup window.
+  Cause:     diagnostics showed the clips were sampled correctly (33 of 75
+             bones moved), but the editor did not re-skin the model in the
+             preview between frames.
+  Fix:       the preview bakes the sampled pose into a mesh every frame and
+             draws that. Two Move poses rendered for Angelo and Brick now
+             differ clearly (about 25,000 and 16,000 changed pixels), and
+             the camera is framed on the character's real size.
+
+
+6. TIMING LOG
+-------------
+
+Same scope both ways: start from a ready model prefab and ready numbers;
+finish when the character passes the same checks and is selectable in
+CharacterTest.unity. Starting state: Brick's definition and prefab deleted,
+Angelo already present.
+
+Manual setup of Brick (no tool):
+  1. Duplicate Angelo's generated prefab.
+  2. Swap the visual, then scale it and put it on the ground.
+  3. Put the Animator on the right object, assign the controller, turn root
+     motion off.
+  4. Size the CharacterController.
+  5. Create the definition and fill in the values and clips.
+  6. Set HeroCharacter.definition.
+  7. Add the entry to CharacterRoster.
+  8. Run the tests.
+  9. Play the scene.
+
+  Sample 1:  55 minutes
+  Sample 2:  -
+
+Tool setup of Brick:
+  New Character, fill in the values, Validate, Create / Update, run the
+  tests, play the scene.
+
+  Sample 1:  TBD
+  Sample 2:  -
+
+Limitations: small sample count (manual n = 1). The person timing also
+wrote the tool, which biases the result towards the tool. Do not compare
+these numbers with the brief's 210 minutes, which cover real art, animation
+and preview steps.
+
+
+7. TIME SPENT
+-------------
+
+  My hands-on time (directing, reviewing, play-testing)   TBD
+  Waiting on the AI and Unity batch runs                   TBD
+  Debugging and clean-up                                   TBD
+
+
+8. MEASURED VS INFERRED
+-----------------------
+
+Measured: test results, the defect diagnostics above, and the manual setup
+time.
+
+Inferred, not yet proven: that the same time saving holds for production
+characters with full rigs, VFX and new abilities. That needs the baseline
+audit described in DESIGN_AND_ROLLOUT.txt.
+
+A fast tool run shows that the workflow is quicker. On its own, it does not
+show how much faster the AI made development.
