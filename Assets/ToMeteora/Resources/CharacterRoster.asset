@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521989c64388be74eb57909359e20fae, type: 3}
+  m_Name: CharacterRoster
+  m_EditorClassIdentifier: ToMeteora.Runtime::ToMeteora.CharacterRoster
+  entries:
+  - definition: {fileID: 11400000, guid: 0bf739d5ac0ca8640941ca1f92761060, type: 2}
+    prefab: {fileID: 8392938236939131474, guid: 7b27f5e9890d2a546a880254b5c59df4, type: 3}
+  - definition: {fileID: 11400000, guid: 491de560fa08c7248adf7e545d428622, type: 2}
+    prefab: {fileID: 4012911629451497899, guid: d0c342f6478b9dc4a8cda6fe5a22c9fe, type: 3}

@@ -1,0 +1,28 @@
+﻿%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f86d58d8ccb9fb640a3c0b23f2e8f3ec, type: 3}
+  m_Name: Angelo
+  m_EditorClassIdentifier: ToMeteora.Runtime::ToMeteora.CharacterDefinition
+  id: hero_angelo
+  displayName: Angelo
+  visualPrefab: {fileID: 4787734284849576031, guid: bc9b8995d9a84ce4bb167233a114be3d, type: 3}
+  visualHeight: 2.5
+  visualYaw: 0
+  idleClip: {fileID: 7400000, guid: affe98f03e6bf064d944d979e896e8e8, type: 2}
+  moveClip: {fileID: 7400000, guid: bb4cecb30defdd243a141cfd2bb3f58b, type: 2}
+  attackClip: {fileID: 1877912311286220071, guid: 161b6f15d1a2ebf4090f475d722b9b28, type: 2}
+  moveAnimationSpeed: 1
+  customController: {fileID: 0}
+  health: 100
+  moveSpeed: 3
+  cooldown: 3
+  ability: {fileID: 11400000, guid: f282c0d22cf670447aa15c09a56afe9c, type: 2}
