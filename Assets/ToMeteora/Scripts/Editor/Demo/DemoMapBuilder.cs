@@ -37,6 +37,7 @@ namespace ToMeteora.Tools
             SetupUi(demo);
             PlaceEnemies(demo, everything);
             SetShadowDistance(camera.GetComponent<IsometricCamera>());
+            AddAtmosphere(camera.GetComponent<IsometricCamera>(), ground);
 
             SavePreviews(camera, fog, demo.spawnPoint, everything);
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -243,8 +244,6 @@ namespace ToMeteora.Tools
             fogRenderer.receiveShadows = false;
             fog = fogPlane.AddComponent<FogOfWar>();
             fog.demo = demo;
-            fog.areaCenter = new Vector2(ground.center.x, ground.center.z);
-            fog.areaSize = mapSize;
             fog.revealRadius = mapSize * 0.18f;
 
             return demo;
@@ -287,6 +286,78 @@ namespace ToMeteora.Tools
                 return point.Value;
             Debug.LogWarning($"MAP: no ground found below {xz}");
             return new Vector3(xz.x, everything.center.y, xz.z);
+        }
+
+        public static void AddAtmosphereToOpenScene()
+        {
+            var iso = Object.FindAnyObjectByType<IsometricCamera>();
+            var groundRenderers = Object.FindObjectsByType<MeshRenderer>()
+                .Where(r => MeshPath(r).Contains("/Models/Lands/"))
+                .ToArray();
+            if (iso == null || groundRenderers.Length == 0)
+                throw new Exception("The open scene needs an IsometricCamera and the location's ground.");
+            AddAtmosphere(iso, Encapsulate(groundRenderers));
+        }
+
+        static void AddAtmosphere(IsometricCamera iso, Bounds ground)
+        {
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Linear;
+            RenderSettings.fogColor = new Color(0.66f, 0.74f, 0.84f);
+            RenderSettings.fogStartDistance = iso.Distance * 0.85f;
+            RenderSettings.fogEndDistance = iso.Distance + iso.mapSize * 1.6f;
+
+            var old = GameObject.Find("Ambient Mist");
+            if (old != null)
+                Object.DestroyImmediate(old);
+
+            var mist = new GameObject("Ambient Mist").AddComponent<ParticleSystem>();
+            var lighting = GameObject.Find("Lighting");
+            if (lighting != null)
+                mist.transform.SetParent(lighting.transform, false);
+            mist.transform.position = new Vector3(ground.center.x, ground.max.y + 1.2f, ground.center.z);
+            mist.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = mist.main;
+            main.loop = true;
+            main.prewarm = true;
+            main.duration = 10f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(10f, 16f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.1f, 0.35f);
+            main.startSize = new ParticleSystem.MinMaxCurve(5f, 10f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startColor = new Color(0.9f, 0.94f, 1f, 1f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 90;
+
+            var emission = mist.emission;
+            emission.rateOverTime = 7f;
+
+            var shape = mist.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = new Vector3(ground.size.x, 1.5f, ground.size.z);
+            shape.randomDirectionAmount = 1f;
+
+            var color = mist.colorOverLifetime;
+            color.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.14f, 0.3f), new GradientAlphaKey(0.14f, 0.7f), new GradientAlphaKey(0f, 1f) });
+            color.color = gradient;
+
+            var rotation = mist.rotationOverLifetime;
+            rotation.enabled = true;
+            rotation.z = new ParticleSystem.MinMaxCurve(-0.1f, 0.1f);
+
+            var renderer = mist.GetComponent<ParticleSystemRenderer>();
+            renderer.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                "Packages/com.unity.render-pipelines.universal/Runtime/Materials/ParticlesUnlit.mat");
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.maxParticleSize = 2f;
+
+            mist.Play();
         }
 
         public static PlayerStart AddPlayerStart(CharacterSelectDemo demo, Transform parent)
@@ -396,11 +467,10 @@ namespace ToMeteora.Tools
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = camera;
             canvas.planeDistance = 1f;
-            fog.Setup();
             fog.Reveal(spawn);
             iso.FocusOn(spawn);
             Render(camera, Path.Combine(folder, "DemoMap_game.png"));
-            fog.GetComponent<Renderer>().SetPropertyBlock(null);
+            fog.Hide();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.worldCamera = null;
 

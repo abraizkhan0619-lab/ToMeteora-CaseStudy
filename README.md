@@ -161,6 +161,15 @@ To regenerate the scene, close the Editor and run:
 "C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Unity.exe" -batchmode -quit -projectPath . -executeMethod ToMeteora.Tools.DemoMapBuilder.Build
 ```
 
+**Fog of war** (`Gameplay/Fog Of War`):
+- Only a circle around the character is visible.
+- The circle is computed per pixel in the shader, so it is perfectly round and antialiased at any zoom.
+- Tune **Reveal Radius**, **Edge Softness**, **Darkness** and **Fog Color** on the component. All of them can be changed during play.
+
+**Atmosphere:**
+- linear distance fog (Lighting settings)
+- a slow ground mist (`Lighting/Ambient Mist`, a particle system you can tweak)
+
 > The fog of war reads the camera depth texture, so `Settings/URP-Renderer.asset` must keep **Copy Depth Mode** set to **After Opaques**.
 
 ## Project layout
