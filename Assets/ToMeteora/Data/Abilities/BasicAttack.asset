@@ -15,5 +15,5 @@ MonoBehaviour:
   displayName: Basic Attack
   damage: 20
   range: 1.5
-  radius: 3
+  radius: 10
   areaIndicator: {fileID: 2442011001530533607, guid: 64e4cb04fcd364449b4cf0f3ffd74001, type: 3}
